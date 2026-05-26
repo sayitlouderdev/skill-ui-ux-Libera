@@ -163,7 +163,7 @@ Select the mode that matches the user's task.
 - `heading-hierarchy` — Preserve meaningful document outline (h1→h6); avoid skipping levels unless the structure remains understandable without visual context
 - `color-not-only` — Don't convey info by color alone (add icon/text)
 - `dynamic-type` — Support system text scaling; avoid truncation as text grows
-- `reduced-motion` — Respect `prefers-reduced-motion`; reduce/disable animations when requested
+- `reduced-motion` — Respect `prefers-reduced-motion`; reduce/disable animations when requested. In Next.js/React with Framer Motion: wrap `layout.tsx` children with `<MotionConfig reducedMotion="user">` — this handles the system preference globally without per-component checks.
 - `voiceover-sr` — Meaningful `accessibilityLabel`/`accessibilityHint`; logical reading order
 - `escape-routes` — Provide cancel/back in modals and multi-step flows
 - `keyboard-shortcuts` — Preserve system and a11y shortcuts; offer keyboard alternatives for drag-and-drop
@@ -183,7 +183,7 @@ Select the mode that matches the user's task.
 - `press-feedback` — Visual feedback on press (ripple/highlight; MD3 state layers)
 - `haptic-feedback` — Use haptic for confirmations and important actions; avoid overuse
 - `gesture-alternative` — Don't rely on gesture-only interactions; always provide visible controls
-- `safe-area-awareness` — Keep primary touch targets away from notch, Dynamic Island, gesture bar
+- `safe-area-awareness` — Keep primary touch targets away from notch, Dynamic Island, gesture bar. For sticky bottom bars: use `style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}` directly — Tailwind's `pb-safe` requires the `tailwindcss-safe-area` plugin; if it is not installed the class is silently ignored and iPhone home-indicator content gets clipped.
 - `no-precision-required` — Avoid requiring pixel-perfect taps on small icons or thin edges
 - `swipe-clarity` — Swipe actions must show clear affordance or hint
 - `drag-threshold` — Use a movement threshold before starting drag to avoid accidental drags
@@ -253,6 +253,8 @@ Select the mode that matches the user's task.
 - `grid-over-flex-math` — Use CSS Grid for multi-column layouts; never `calc(33% - 1rem)` flexbox math — unreliable across browsers
 - `scroll-smooth` — Add `scroll-behavior: smooth` on `<html>` for anchor link navigation
 - `semantic-html` — Use `<nav>`, `<main>`, `<article>`, `<aside>`, `<section>`; avoid div soup — improves accessibility and SEO
+- `hero-image-anchor` — Background images must be anchored OPPOSITE to the primary text position: text left → `object-right`; text right → `object-left`; centered text → `object-center`. Prevents the image subject from being obscured by text overlay when the viewport narrows. Applies to hero sections, full-bleed section backgrounds, and any `fill`-mode next/image with overlaid content.
+- `card-equal-height` — CSS Grid stretches grid items to row height automatically, but nested wrapper divs do not inherit that height unless explicit. Add `h-full` to every div in the wrapper chain (article → outer bezel → inner card div). Add `flex flex-col` to the card and `flex-1` to the variable-length content area (description, bio, body text). CTA rows and footers then align to card bottom regardless of content length.
 
 ### 6. Typography & Color (MEDIUM)
 
@@ -278,6 +280,7 @@ Select the mode that matches the user's task.
 
 - `duration-timing` — Use 150–300ms for micro-interactions; complex transitions ≤400ms; avoid >500ms
 - `transform-performance` — Use `transform`/`opacity` only; avoid animating `width`/`height`/`top`/`left`
+- `progress-bar-scaleX` — Animate progress bars and fill indicators with `scaleX` + `transform-origin: left`, not `width`. Animating `width` triggers layout recalculation every frame; `scaleX` runs on the GPU compositor.
 - `loading-states` — Show skeleton or progress indicator when loading exceeds 300ms
 - `excessive-motion` — Animate 1–2 key elements per view max
 - `easing` — Use ease-out for entering, ease-in for exiting; avoid linear for UI transitions
@@ -296,6 +299,7 @@ Select the mode that matches the user's task.
 - `modal-motion` — Modals/sheets should animate from their trigger source for spatial context
 - `navigation-direction` — Forward navigation commonly animates left/up, backward right/down — applies to LTR mobile stacks; adapt for RTL layouts, platform conventions (iOS swipe-back, Android predictive back), desktop, split views, and non-stack transitions
 - `motion-state-isolation` — For magnetic hover or infinite loops with Motion/Framer Motion: use `useMotionValue` + `useTransform` outside render cycle; never `useState` — prevents performance collapse on mobile
+- `marquee-drag-pattern` — For auto-scrolling carousels that also support manual drag: use `useMotionValue` + `useAnimationFrame` (accumulator pattern) for continuous scroll, `drag="x"` with `dragMomentum={false}` and `dragElastic={0}` for manual override. An `isDragging` ref pauses the animation frame during drag; `onDragEnd` syncs the accumulator to `motionX.get()` so scroll resumes seamlessly from where the user released. Never use CSS `animation: marquee` when manual drag is needed — CSS animations cannot co-exist with JS position control.
 
 ### 8. Forms & Feedback (MEDIUM)
 
@@ -381,10 +385,11 @@ Every interactive component needs all states implemented — AI default is to on
 
 Items AI consistently forgets before shipping.
 
-- `meta-tags` — Include `<title>`, `<meta name="description">`, `og:title`, `og:description`, `og:image`, `twitter:card` on every page
+- `meta-tags` — Include `<title>`, `<meta name="description">`, `og:title`, `og:description`, `og:image` (physical file must exist in `/public/` — declaring it in metadata without the file produces broken social previews), `twitter:card` on every page. In Next.js App Router: declare in the `metadata` export of `layout.tsx` or `page.tsx`.
 - `favicon` — Always include a branded favicon; no browser default
 - `legal-footer` — Privacy policy + terms of service links in footer where legally required
-- `custom-404` — Custom branded 404 page with navigation back; never expose server default
+- `custom-404` — Custom branded 404 page with navigation back; never expose server default. In Next.js: `app/not-found.tsx`. Also add `app/sitemap.ts` for SEO crawlability.
+- `legal-links-real` — Footer privacy policy and terms links must point to real pages, not `href="#"`. Dead legal links are both a UX failure and a compliance risk in jurisdictions that require accessible privacy notices.
 - `skip-to-content` — Hidden skip-link at page top for keyboard users: `<a href="#main" class="sr-only focus:not-sr-only">`
 - `cookie-consent` — Compliant consent banner where required by jurisdiction (EU, UK, CA)
 - `no-dead-links` — No buttons or links pointing to `#` without a real destination or disabled state
@@ -405,7 +410,7 @@ Extract key information from the user request:
 
 ### Step 2: Generate Design System
 
-Clone [skill-ui-ux-Libera](https://github.com/sayitlouderdev/skill-ui-ux-Libera) and run:
+Clone [skill-ui-ux-Libera](https://github.com/liberastudio-mx/skill-ui-ux-Libera) and run:
 
 ```bash
 python3 scripts/search.py "<product_type> <industry> <keywords>" --design-system [-p "Project Name"]
@@ -460,7 +465,7 @@ Apply stack-specific best practices for your chosen framework. All 10 stacks sup
 - [ ] Decorative images use `alt=""` and decorative icons use `aria-hidden="true"`
 - [ ] Form fields have labels, hints, and clear error messages
 - [ ] Color is not the only indicator
-- [ ] Reduced motion and dynamic text size supported
+- [ ] Reduced motion and dynamic text size supported — Framer Motion projects: `<MotionConfig reducedMotion="user">` in root layout
 - [ ] Accessibility traits/roles/states announced correctly
 
 ### Performance (2025)
@@ -481,9 +486,11 @@ Apply stack-specific best practices for your chosen framework. All 10 stacks sup
 
 ### Launch Completeness
 - [ ] Meta tags present: title, description, og:image, twitter:card
+- [ ] `og:image` physical file exists in `/public/` (not just declared in metadata)
 - [ ] Branded favicon present
-- [ ] Legal links in footer (privacy policy, terms)
-- [ ] Custom 404 page
+- [ ] Legal links in footer (privacy policy, terms) point to real pages, not `href="#"`
+- [ ] Custom 404 page — Next.js: `app/not-found.tsx`
+- [ ] `app/sitemap.ts` present (Next.js)
 - [ ] Skip-to-content link present
 - [ ] No dead links (`href="#"` without disabled state)
 - [ ] Client-side form validation
@@ -507,6 +514,9 @@ Apply stack-specific best practices for your chosen framework. All 10 stacks sup
 | Scroll animations cause jank | Use IntersectionObserver; never `window.addEventListener('scroll')` |
 | Component missing states | §11: implement loading + empty + error + active feedback for every component |
 | Missing before launch | §12 checklist: meta tags, favicon, legal links, 404, skip-to-content |
+| Image subject hidden under text overlay | §5 `hero-image-anchor`: anchor OPPOSITE to text — text left → `object-right`, text right → `object-left` |
+| Cards unequal height in grid | §5 `card-equal-height`: `h-full` on every wrapper div in chain + `flex flex-col` on card + `flex-1` on variable content |
+| CSS marquee breaks when adding drag | §7 `marquee-drag-pattern`: use `useMotionValue` + `useAnimationFrame` — CSS animation cannot co-exist with JS position control |
 
 ---
 
