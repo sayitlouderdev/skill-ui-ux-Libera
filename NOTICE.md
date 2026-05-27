@@ -1,7 +1,7 @@
 # NOTICE
 
 skill-ui-ux-Libera — UI/UX Design Intelligence Skill
-Copyright 2026 LIBERA Studio (sayitlouderdev)
+Copyright 2026 LIBERA Studio
 
 This repository is licensed under the MIT License.
 See LICENSE for the full license text.
